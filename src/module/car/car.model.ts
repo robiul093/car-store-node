@@ -1,7 +1,7 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { ICar } from './car.interface';
 
-const carSchema = new Schema<ICar & Document>(
+const carSchema = new Schema<ICar>(
   {
     brand: {
       type: String,
@@ -45,6 +45,6 @@ const carSchema = new Schema<ICar & Document>(
   { timestamps: true },
 );
 
-const Car = mongoose.model<ICar & Document>('Car', carSchema);
+const Car = mongoose.model<ICar>('Car', carSchema);
 
 export default Car;
