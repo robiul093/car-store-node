@@ -1,11 +1,23 @@
 import config from "../../app/config";
-import { TUser } from "./auth.interface"
+import { TChangePassword, TUser } from "./auth.interface"
 import User from "./auth.model"
 import bycript from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 
-const createUserIntoDB = async (payload: TUser) =>{
+type TDbUser = {
+    createdAt: string,
+    email: string,
+    isActive: boolean,
+    name: string,
+    password: string,
+    role: string,
+    updatedAt: string,
+    __v: number,
+    _id: string,
+}
+
+const createUserIntoDB = async (payload: TUser) => {
     const res = await User.create(payload);
 
     const jsonPayload = {
@@ -15,7 +27,7 @@ const createUserIntoDB = async (payload: TUser) =>{
         id: res._id
     };
 
-    const token = jwt.sign(jsonPayload, config.jwt_secret as string, {expiresIn: '3d'});
+    const token = jwt.sign(jsonPayload, config.jwt_secret as string, { expiresIn: '3d' });
 
     const user = {
         name: res.name,
@@ -28,10 +40,10 @@ const createUserIntoDB = async (payload: TUser) =>{
 };
 
 
-const userLoginIntoDB = async (payload: {email: string, password: string}) => {
-    const user = await User.findOne({email: payload.email});
+const userLoginIntoDB = async (payload: { email: string, password: string }) => {
+    const user = await User.findOne({ email: payload.email });
 
-    if(!user){
+    if (!user) {
         throw new Error('This user not exist')
     };
 
@@ -40,7 +52,7 @@ const userLoginIntoDB = async (payload: {email: string, password: string}) => {
         user.password
     );
 
-    if(!isPasswordMatch){
+    if (!isPasswordMatch) {
         throw new Error('Password not match')
     };
 
@@ -51,13 +63,55 @@ const userLoginIntoDB = async (payload: {email: string, password: string}) => {
         id: user?._id,
     };
 
-    const token = jwt.sign(jsonPayload, config.jwt_secret as string, {expiresIn: '3d'})
+    const token = jwt.sign(jsonPayload, config.jwt_secret as string, { expiresIn: '10d' })
 
     return token;
-}
+};
+
+
+const changePasswordService = async (payload: TChangePassword) => {
+    const user = await User.findById(payload.userId);
+
+    if (!user) {
+        throw new Error('This user not exist');
+    };
+
+    const isPasswordMatch = await bycript.compare(
+        payload.currentPassword,
+        user.password
+    );
+
+    if (!isPasswordMatch) {
+        throw new Error('Password not match')
+    };
+
+    const hashedPassword = await bycript.hash(payload.newPassword, Number(config.bcrypt_salt_round));
+
+    const result = User.findByIdAndUpdate(payload.userId, { password: hashedPassword }, { new: true });
+
+    return result;
+};
+
+
+const getAllUserFromDB = async () => {
+    const result = await User.find();
+
+    return result;
+};
+
+
+const updateUserStatusIntoDb = async (payload: TDbUser) => {
+    const { _id, isActive } = payload;
+    const result = await User.findByIdAndUpdate(_id, { $set: { isActive: !isActive } }, { new: true })
+
+    return result
+};
 
 
 export const authService = {
     createUserIntoDB,
     userLoginIntoDB,
+    changePasswordService,
+    getAllUserFromDB,
+    updateUserStatusIntoDb
 }
