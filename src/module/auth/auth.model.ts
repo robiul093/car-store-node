@@ -27,6 +27,10 @@ const userSchema = new Schema<TUser>({
     role: {
         type: String,
         default: 'user'
+    },
+    isActive: {
+        type: Boolean,
+        default: true
     }
 }, { timestamps: true });
 
