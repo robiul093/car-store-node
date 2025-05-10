@@ -42,12 +42,12 @@ const createCar = async (req: Request, res: Response) => {
 
 const getAllCars = async (req: Request, res: Response): Promise<Response | void> => {
   try {
-    const { searchTerm } = req.query;
+    console.log('Incoming query:', req.query);
 
-    const result = await carService.getAllCars(searchTerm as string);
+    const result = await carService.getAllCars(req.query);
 
     // no cars found
-    if (result.length === 0) {
+    if (result?.result?.length === 0) {
       return res.status(400).json({
         success: false,
         message: 'No cars match the search criteria',

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { authService } from "./auth.service";
+import catchAsync from "../../utils/catchAsync";
 
 
 const createUser = async (req: Request, res: Response,) => {
@@ -32,9 +33,7 @@ const createUser = async (req: Request, res: Response,) => {
 const userLogin = async (req: Request, res: Response) => {
     try {
 
-        const payload = req.body;
-
-        const result = await authService.userLoginIntoDB(payload);
+        const result = await authService.userLoginIntoDB(req.body);
 
         res.json({
             success: true,
@@ -53,10 +52,46 @@ const userLogin = async (req: Request, res: Response) => {
             stack: err.stack,
         });
     }
-}
+};
+
+
+const changePassword = catchAsync(async (req, res) => {
+    const result = await authService.changePasswordService(req.body)
+
+    res.json({
+        success: true,
+        message: 'Password updated successfully!',
+        data: result,
+    });
+});
+
+
+const getAllUser = catchAsync(async (req, res) => {
+    const result = await authService.getAllUserFromDB();
+
+    res.json({
+        success: true,
+        message: 'User retrived successfully!',
+        data: result,
+    });
+});
+
+
+const updateUserStatus = catchAsync(async (req, res) => {
+    const result = await authService.updateUserStatusIntoDb(req.body);
+
+    res.json({
+        success: true,
+        message: 'Status updated successfully!',
+        data: result,
+    });
+})
 
 
 export const authController = {
     createUser,
     userLogin,
+    changePassword,
+    getAllUser,
+    updateUserStatus
 }
